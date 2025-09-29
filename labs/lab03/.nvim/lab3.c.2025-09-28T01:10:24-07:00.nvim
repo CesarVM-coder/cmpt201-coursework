@@ -1,0 +1,64 @@
+#define _POSIX_C_SOURCE 200809L
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+void print_lines(char *history[], int count) {
+  for (int i = 0; i < count; i++) {
+    printf("%s\n", history[i]);
+  }
+}
+
+void add_history(char *line, char *history[], int *count) {
+  if (*count < 5) {
+    history[*count] = line;
+    (*count)++;
+  } else {
+    free(history[0]);
+    for (int i = 0; i < 4; i++) {
+      history[i] = history[i + 1];
+    }
+    history[4] = line;
+  }
+}
+
+void clear_history(char *history[], int count) {
+  for (int i = 0; i < count; i++) {
+    free(history[i]);
+  }
+}
+
+int main() {
+
+  char *history[5] = {NULL};
+  int count = 0; // Keep track of size of the list to print.
+
+  char *line = NULL;
+  size_t len = 0;
+
+  while (1) {
+    printf("Enter input: ");
+    ssize_t nread = getline(&line, &len, stdin);
+    if (nread == -1) {
+      perror("getline() failed");
+      exit(1);
+    }
+
+    if (line[nread - 1] == '\n') {
+      line[nread - 1] = '\0';
+    }
+
+    // Print input
+    if (strcmp(line, "print") == 0) {
+      print_lines(history, count);
+      add_history(strdup(line), history, &count);
+    } else {
+      add_history(strdup(line), history, &count);
+    }
+  }
+
+  clear_history(history, count);
+  free(line);
+
+  return 0;
+}
